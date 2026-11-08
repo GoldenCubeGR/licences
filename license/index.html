@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="title">License</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            margin: 0;
+            padding: 0;
+            background-color: #c0c0c0;
+            color: #000;
+        }
+
+        main {
+            background-color: #fff;
+            border: 2px solid #808080;
+            padding: 1.5rem;
+            margin: 3rem auto;
+            max-width: 900px;
+            width: calc(100% - 5rem);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-top: 0;
+            color: #000080;
+            border-bottom: 2px solid #808080;
+            padding-bottom: 0.5rem;
+        }
+
+        select, button {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+
+        select {
+            background: #fff;
+            border: 1px solid #777;
+            padding: 3px;
+        }
+
+        a {
+            color: #0000ee;
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: #551a8b;
+        }
+
+        a:hover {
+            color: #ff0000;
+        }
+
+        #contentDiv {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f0f0f0;
+            border: 1px solid #808080;
+            overflow-x: auto;
+        }
+
+        code {
+            display: block;
+            font-family: "Courier New", monospace;
+            font-size: 13px;
+            color: #000;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        #raw {
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #808080;
+        }
+
+    </style>
+</head>
+<body>
+
+    <main>
+        <h1 id="license-title">License</h1>
+        <div>
+            <span style="display: inline;">
+                <form>
+                    <select id="version-selector" name="versions">
+                    </select>
+                    <a id="raw" target="_blank" style="margin-left: 0.5rem;">View raw</a>
+                    <a href="/" style="margin-left: 0.5rem;">Back to home &#8592;</a>
+                </form>
+            </span>
+            <hr>
+            <div id="contentDiv">
+                <code id="content">
+
+                </code>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Source - https://stackoverflow.com/a/22607328
+        // Posted by neel shah, modified by community. See post 'Timeline' for change history
+        // Retrieved 2026-11-08, License - CC BY-SA 4.0
+
+        function GetURLParameter(sParam)
+        {
+            var sPageURL = window.location.search.substring(1);
+            var sURLVariables = sPageURL.split('&');
+            for (var i = 0; i < sURLVariables.length; i++) 
+            {
+                var sParameterName = sURLVariables[i].split('=');
+                if (sParameterName[0] == sParam) 
+                {
+                    return sParameterName[1];
+                }
+            }
+        }
+
+        // Load license
+        const licenseName = GetURLParameter("license");
+        document.getElementById("title").innerText = `${licenseName} | goldenCube Software Foundation Licenses`;
+        document.getElementById("license-title").innerText = licenseName;
+        const dropDown = document.getElementById("version-selector");
+        const contentElement = document.getElementById("content");
+
+        const API_URL = `https://api.github.com/repos/GoldenCubeGR/licences/git/trees/main?recursive=1`;
+        const BASE_PATH = `licenses/${licenseName}`;
+
+        async function getLicenseFiles() {
+            const response = await fetch(API_URL);
+
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            return data.tree
+                .filter(entry =>
+                    entry.type === "blob" &&
+                    entry.path.startsWith(`${BASE_PATH}/`) &&
+                    entry.path.split("/").length === 3
+                )
+                .map(entry => entry.path.split("/").pop());
+        }
+
+        async function getLicenseContent(fileName) {
+            const path = `${BASE_PATH}/${fileName}`;
+
+            const response = await fetch(
+                `https://api.github.com/repos/GoldenCubeGR/licences/contents/${path}?ref=main`
+            );
+
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            return atob(data.content.replace(/\n/g, ""));
+        }
+
+        async function init() {
+        const files = await getLicenseFiles();
+
+        for (const name of files) {
+            console.log(name);
+
+            const option = document.createElement("option");
+            option.value = name;
+            option.textContent = name;
+            dropDown.appendChild(option);
+        }
+
+        // Get content of a specific file
+        document.getElementById("raw").href = `https://raw.githubusercontent.com/GoldenCubeGR/licences/refs/heads/main/licenses/${licenseName}/${files[0]}`
+        const content = await getLicenseContent(files[0]);
+        console.log(content);
+        contentElement.textContent = content;
+    }
+
+    init().catch(console.error);
+
+    </script>
+</body>
+</html>
