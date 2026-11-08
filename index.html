@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licences | goldenCube Software Foundation</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            margin: 0;
+            padding: 0;
+            background-color: #c0c0c0;
+            color: #000;
+        }
+
+        main {
+            background-color: #fff;
+            border: 2px solid #808080;
+            padding: 1.5rem;
+            margin: 3rem auto;
+            max-width: 800px;
+            width: calc(100% - 4rem);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #000080;
+            margin-top: 0;
+            border-bottom: 2px solid #808080;
+            padding-bottom: 0.5rem;
+        }
+
+        select {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            padding: 3px;
+            background-color: #fff;
+            border: 1px solid #777;
+            min-width: 200px;
+        }
+
+        a {
+            color: #0000ee;
+        }
+
+        a:visited {
+            color: #551a8b;
+        }
+
+        a:hover {
+            color: #ff0000;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            margin: 2rem;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>goldenCube Software Foundation | Licenses</h1>
+        <div>
+            <form>
+                <select id="licenses-selector" name="licenses">
+                    <option></option>
+                </select>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Load licenses
+        const dropDown = document.getElementById("licenses-selector");
+
+        const API_URL = "https://api.github.com/repos/GoldenCubeGR/licences/git/trees/main?recursive=1";
+
+        async function getLicenses() {
+            const response = await fetch(API_URL);
+
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            const folders = data.tree.filter(entry =>
+                entry.type === "tree" &&
+                entry.path.startsWith("licenses/") &&
+                entry.path.split("/").length === 2
+            );
+
+            for (const folder of folders) {
+                const name = folder.path.split("/")[1];
+                console.log(name);
+                let option = document.createElement("option");
+                option.value = name;
+                option.textContent = name;
+                dropDown.appendChild(option);
+                dropDown.appendChild(option);
+            }
+        }
+
+        getLicenses().catch(console.error);
+
+        dropDown.addEventListener("change", function() {
+            const selectedLicense = this.value;
+            if (selectedLicense) {
+                window.location.href = `/license/?license=${encodeURIComponent(selectedLicense)}`;
+            }
+        });
+        
+
+    </script>
+</body>
+</html>
